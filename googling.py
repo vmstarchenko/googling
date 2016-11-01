@@ -23,6 +23,7 @@ def get_copied_text(encoding='utf-8'):
 
 
 def google_search(browser='firefox', **kargs):
+    """Search copied text by google."""
     # check copied text
     copied_text = get_copied_text()
     if copied_text['code'] != 0:
@@ -50,7 +51,15 @@ def google_search(browser='firefox', **kargs):
     return {'code': 0}
 
 
+# main functions
+def search(**kargs):
+    result = google_search(**kargs)
+    if result['code'] != 0:
+        print('Error:', result.get('msg', 'unknown'))
+        exit(1)
+
 def main():
+    """init argument parser."""
     parser = argparse.ArgumentParser(
         description='Tools for googling',
         usage='%(prog)s [options]',  # short description
@@ -74,7 +83,7 @@ def main():
         usage='%(prog)s [options]',
         help='search string from buffer'
     )
-    search_parser.set_defaults(func=google_search)
+    search_parser.set_defaults(func=search)
 
     options = vars(parser.parse_args())
     if options.get('func', None):
