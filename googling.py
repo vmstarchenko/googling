@@ -3,9 +3,19 @@
 import subprocess
 from urllib.parse import urlencode
 import argparse
+import tkinter
 
 SUBPROCESS_TIMEOUT = 1
 VERSION = '1.0.0'
+
+
+def showerror(msg):
+    """show message by tkinter popup."""
+    root = tkinter.Tk()
+    root.title('')
+    tkinter.Label(root, text='Error: ' + str(msg), borderwidth=10).pack()
+    tkinter.Button(root, text='Ok', command=root.quit, ).pack()
+    root.mainloop()
 
 
 def get_copied_text(encoding='utf-8'):
@@ -55,8 +65,9 @@ def google_search(browser='firefox', **kargs):
 def search(**kargs):
     result = google_search(**kargs)
     if result['code'] != 0:
-        print('Error:', result.get('msg', 'unknown'))
+        showerror(result.get('msg', 'unknown'))
         exit(1)
+
 
 def main():
     """init argument parser."""
