@@ -61,9 +61,48 @@ def google_search(browser='firefox', **kargs):
     return {'code': 0}
 
 
+def google_translate(browser='firefox', from_='en', to='ru', **kargs):
+    """Translate copied text by google."""
+    # check copied text
+    copied_text = get_copied_text()
+    if copied_text['code'] != 0:
+        return copied_text
+    string = copied_text.get('string', '')
+    if string == '':
+        return {'code': 1, 'msg': 'empty buffer'}
+
+    # construct url
+    google_translate_url = 'https://translate.google.com/#%(from)s/%(to)s/%(q)s'
+    url = google_translate_url % {
+        'from': from_,
+        'to': to,
+        'q': urlencode({'q':string}, encoding='utf-8')[2:]
+    }
+
+    # googling
+    browsers_commands = {
+        'firefox': ['firefox', url, '-new-tab', ]
+    }
+    command = browsers_commands.get(browser, None)
+    if command is None:
+        return {'code': 1, 'msg': 'unknown browser'}
+    with subprocess.Popen(command, stdout=subprocess.PIPE) as proc:
+        out, err = proc.communicate(timeout=SUBPROCESS_TIMEOUT)
+    if err:
+        return {'code': 1, 'msg': 'googling subprecess error'}
+    return {'code': 0}
+
+
 # main functions
 def search(**kargs):
     result = google_search(**kargs)
+    if result['code'] != 0:
+        showerror(result.get('msg', 'unknown'))
+        exit(1)
+
+
+def translate(**kargs):
+    result = google_translate(**kargs)
     if result['code'] != 0:
         showerror(result.get('msg', 'unknown'))
         exit(1)
@@ -95,6 +134,15 @@ def main():
         help='search string from buffer'
     )
     search_parser.set_defaults(func=search)
+
+    # translate
+    translate_parser = subparsers.add_parser(
+        'translate',
+        usage='%(prog)s [options]',
+        help='translate string from buffer'
+    )
+    translate_parser.set_defaults(func=translate)
+
 
     options = vars(parser.parse_args())
     if options.get('func', None):
